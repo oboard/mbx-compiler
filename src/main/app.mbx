@@ -1,0 +1,17 @@
+///|
+fn app() -> Component {
+    let message = "Hello World"
+    <div>
+                
+        <div id="container" style="width:500px">
+
+            <div id="header" style="background-color:#FFA500;">
+        
+                <p>{ message }</p>
+
+            </div>
+
+        </div>
+
+    </div>
+}
