@@ -1,9 +1,10 @@
 {
   "is-main": true,
   "import": [
-    {
-      "path": "oboard/vuebit/lib",
-      "alias": "vue"
+    { "path" : "Yoorkin/rabbit-tea", "alias": "tea" },
+    { 
+      "path":"Yoorkin/rabbit-tea/html", 
+      "alias": "html"
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { MBXParser } from './parser';
+import { parse } from './parser';
 
 const testCases = [
   {
@@ -34,8 +34,7 @@ const testCases = [
 testCases.forEach(testCase => {
   console.log(`\n测试: ${testCase.name}`);
   try {
-    const parser = new MBXParser(testCase.input);
-    const ast = parser.parse();
+    const ast = parse(testCase.input);
     console.log('解析成功:', JSON.stringify(ast, null, 2));
   } catch (error) {
     console.error('解析失败:', error);

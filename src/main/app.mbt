@@ -1,13 +1,27 @@
 ///|
-fn app() -> Component {
+enum Message {}
+
+///|
+///|
+fn app() -> @html.Html[Message] {
   let message = "Hello World"
-  render(tag="div", children=[
-    render(tag="div", props={ "id": "container", "style": "width:500px" }, children=[
-      render(
-        tag="div",
-        props={ "id": "header", "style": "background-color:#FFA500;" },
-        children=[render(tag="p", children=[render(text=message)])],
-      ),
-    ]),
+  @html.node("div", [], [
+    @html.node(
+      "div",
+      [
+        @html.attribute("id", "container"),
+        @html.attribute("style", "width:500px"),
+      ],
+      [
+        @html.node(
+          "div",
+          [
+            @html.attribute("id", "header"),
+            @html.attribute("style", "background-color:#FFA500;"),
+          ],
+          [@html.node("p", [], [@html.text(message)])],
+        ),
+      ],
+    ),
   ])
 }

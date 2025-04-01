@@ -1,6 +1,9 @@
 {
   "name": "oboard/vuebit",
   "version": "0.1.0",
+  "deps": {
+    "Yoorkin/rabbit-tea": "0.6.12"
+  },
   "readme": "README.md",
   "repository": "",
   "license": "Apache-2.0",
