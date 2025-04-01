@@ -5,12 +5,6 @@ enum Message {
 
 ///|
 pub fn app() -> @html.Html[Message] {
-    let message = "Hello World"
-    <div>
-        <div id="container" style="width:500px">
-            <div id="header" style="background-color:#FFA500;">
-                <p>{ message }</p>
-            </div>
-        </div>
-    </div>
+    let count = 1
+    <p>You clicked { count.to_string() } times</p>
 }
