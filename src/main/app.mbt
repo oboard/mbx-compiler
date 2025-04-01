@@ -1,9 +1,10 @@
 ///|
 enum Message {}
 
+
+ ///|
 ///|
-///|
-fn app() -> @html.Html[Message] {
+pub fn app() -> @html.Html[Message] {
   let message = "Hello World"
   @html.node("div", [], [
     @html.node(
