@@ -1,0 +1,22 @@
+///|
+enum AnotherMessage {}
+
+
+///|
+pub fn another_app() -> @html.Html[AnotherMessage] {
+    let count = 5
+    let the_section = <section x="{literal\"}" y={ count.to_string() } />
+    let compare_result = count < 0 || count > 42
+    let part = <container>
+        <article data={ count.to_string() }>
+            Hello { if compare_result { "Moon" } else { "Bit" } }
+            language{" "}
+            <span />
+        </article>
+        { compare_result.to_string() }
+        <article />
+        Here are some words...
+    </container>
+    let _ = false
+    part
+}
