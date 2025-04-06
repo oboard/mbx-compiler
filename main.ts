@@ -39,94 +39,102 @@ function transform(content: string): string {
         }
     };
 
-    const transformNode = (node: SyntaxNode): string => {
-        // console.log(node.type);
+    const transformNonXML = (node: SyntaxNode): string => {
         switch (node.type) {
+            case '{':
+                return node.text + '\n ';
             case 'comment':
+            case 'structure_item':
+            case '}':
                 return node.text + '\n';
-            case 'xml_expression': {
-                // 直接获取子节点
-                const openingElement = node.children.find(child => child.type === 'xml_opening_element');
-                const content = node.children.find(child => child.type === 'xml_content');
-                const closingElement = node.children.find(child => child.type === 'xml_closing_element');
-
-                if (!openingElement || !closingElement) return '';
-
-                const name = openingElement.children.find(child => child.type === 'xml_identifier')?.text || '';
-                let result = `@html.node("${name}", `;
-
-                // 处理属性
-                const attributes = openingElement.children.filter(child => child.type === 'xml_attribute');
-                if (attributes.length > 0) {
-                    const props = attributes.map(attr => {
-                        const attrName = attr.children.find(child => child.type === 'xml_attribute_name')?.text || '';
-                        const attrValue = attr.children.find(child => child.type === 'xml_attribute_value');
-                        if (attrValue) {
-                            const valueContent = attrValue.children.find(child => child.type === 'xml_attribute_content');
-                            if (valueContent) {
-                                const interpolations = valueContent.children.filter(child => child.type === 'xml_interpolation');
-                                if (interpolations.length > 0) {
-                                    const expr = interpolations[0].children.find(child => child.type === 'expression');
-                                    if (expr) {
-                                        return `@html.attribute("${attrName}", ${transformExpression(expr)})`;
-                                    }
-                                } else {
-                                    return `@html.attribute("${attrName}", "${valueContent.text}")`;
-                                }
-                            }
-                        }
-                        return '';
-                    }).filter(Boolean);
-                    result += `[${props.join(', ')}], `;
-                } else {
-                    result += '[], ';
-                }
-
-                // 处理子元素
-                if (content) {
-                    const children = content.children.map(child => {
-                        if (child.type === 'xml_text') {
-                            const interpolations = child.children.filter(c => c.type === 'xml_interpolation');
-                            if (interpolations.length > 0) {
-                                // 如果有插值表达式，只处理插值表达式
-                                const parts: string[] = [];
-                                for (const interpolation of interpolations) {
-                                    const expr = interpolation.children.find(c => c.type === 'expression');
-                                    if (expr) {
-                                        parts.push(`@html.text(${transformExpression(expr)})`);
-                                    }
-                                }
-                                return parts.join(', ');
-                            } else {
-                                // 纯文本
-                                const text = child.text.trim();
-                                if (!text) return '';
-                                return `@html.text("${text}")`;
-                            }
-                        }
-                        return transformNode(child);
-                    }).filter(Boolean);
-                    if (children.length > 0) {
-                        result += `[${children.join(', ')}]`;
-                    } else {
-                        result += '[]';
-                    }
-                }
-
-                result += ')\n';
-                return result;
-            }
             default:
-                let result = '';
-                if (isXMLInside(node)) {
-                    for (const child of node.children) {
-                        result += transformNode(child) + ' ';
-                    }
-                } else {
-                    result = node.text;
-                }
-                return result;
+                return node.text + ' ';
         }
+    }
+
+    const transformNode = (node: SyntaxNode): string => {
+        if (!isXMLInside(node)) {
+            return transformNonXML(node);
+        }
+        if (node.type !== 'xml_expression') {
+            let result = '';
+            for (const child of node.children) {
+                result += transformNode(child);
+            }
+            return result;
+        }
+
+        // 直接获取子节点
+        const openingElement = node.children.find(child => child.type === 'xml_opening_element' || child.type === 'xml_self_closing_element');
+        const content = node.children.find(child => child.type === 'xml_content');
+
+        if (!openingElement) return '';
+
+        const name = openingElement.children.find(child => child.type === 'xml_identifier')?.text || '';
+        let result = `@html.node("${name}", `;
+
+        // 处理属性
+        const attributes = openingElement.children.filter(child => child.type === 'xml_attribute');
+        if (attributes.length > 0) {
+            const props = attributes.map(attr => {
+                const attrName = attr.children.find(child => child.type === 'xml_attribute_name')?.text || '';
+                const attrValue = attr.children.find(child => child.type === 'xml_attribute_value');
+                if (attrValue) {
+                    const valueContent = attrValue.children.find(child => child.type === 'xml_attribute_content');
+                    if (valueContent) {
+                        return `@html.attribute("${attrName}", "${valueContent.text}")`;
+                    }
+                    const interpolationContent = attrValue.children.find(child => child.type === 'xml_interpolation');
+                    if (interpolationContent) {
+                        const expr = interpolationContent.children.find(child => child.type === 'expression');
+                        if (expr) {
+                            return `@html.attribute("${attrName}", ${transformExpression(expr)})`;
+                        }
+                    }
+                }
+                return '';
+            }).filter(Boolean);
+            result += `[${props.join(', ')}], `;
+        } else {
+            result += '[], ';
+        }
+
+        // 处理子元素
+        if (content) {
+            const children = content.children.map(child => {
+                if (child.type === 'xml_text') {
+                    const interpolations = child.children.filter(c => c.type === 'xml_interpolation');
+                    if (interpolations.length > 0) {
+                        // 如果有插值表达式，只处理插值表达式
+                        const parts: string[] = [];
+                        for (const interpolation of interpolations) {
+                            const expr = interpolation.children.find(c => c.type === 'expression');
+                            if (expr) {
+                                parts.push(`@html.text(${transformExpression(expr)})`);
+                            }
+                        }
+                        return parts.join(', ');
+                    } else {
+                        // 纯文本
+                        const text = child.text;
+                        if (!text) return '';
+                        return `@html.text("${text}")`;
+                    }
+                }
+                return transformNode(child);
+            }).filter(Boolean);
+            if (children.length > 0) {
+                result += `[${children.join(', ')}]`;
+            } else {
+                result += '[]';
+            }
+        }
+        else {
+            result += '[]';
+        }
+
+        result += ')\n';
+        return result;
     };
 
     return transformNode(rootNode);
@@ -138,10 +146,10 @@ function gen(dir: string) {
         const filePath = path.join(dir, file);
         if (fs.statSync(filePath).isDirectory()) {
             gen(filePath);
-        } else if (file.endsWith('.mbx')) {
+        } else if (/.mbx$/i.test(file)) {
             const content = fs.readFileSync(filePath, 'utf-8');
             // app.mbx -> app.mbt
-            const mbtPath = filePath.replace('.mbx', '.mbt');
+            const mbtPath = filePath.replace(/.mbx$/i, '.mbt');
             fs.writeFileSync(mbtPath, transform(content));
         }
     }
