@@ -1,7 +1,6 @@
 ///|
 enum Message {}
 
-
 ///|
 pub fn app() -> @html.Html[Message] {
   let count = 1

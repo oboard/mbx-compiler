@@ -1,7 +1,6 @@
 ///|
 enum AnotherMessage {}
 
-
 ///|
 pub fn another_app() -> @html.Html[AnotherMessage] {
   let count = 5
